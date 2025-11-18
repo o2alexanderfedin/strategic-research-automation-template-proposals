@@ -1,0 +1,139 @@
+name: Strategic Research Pipeline
+
+on:
+  # Only trigger on context/config changes, not on all pushes
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'config/sprint-config.yml'
+      - 'context/**'
+  workflow_dispatch:
+    inputs:
+      sprint_numbers:
+        description: 'Sprint numbers to execute (comma-separated, or "all")'
+        required: false
+        default: 'all'
+      export_format:
+        description: 'Export format (pdf, docx, html, all)'
+        required: false
+        default: 'pdf'
+
+jobs:
+  execute-research:
+    name: Execute Strategic Research
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours max
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify research context exists
+        id: check-context
+        run: |
+          # Check if this is a template repository (no actual research configured)
+          if [ ! -f "config/project-config.yml" ] || ! grep -q "^project_name:" config/project-config.yml || grep -q "{{.*}}" config/project-config.yml; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Template repository detected - no research context configured"
+            echo "This workflow requires initialized research context. Skipping execution."
+            exit 0
+          fi
+
+          echo "skip=false" >> $GITHUB_OUTPUT
+          echo "✓ Research context verified"
+
+      - name: Setup Claude Code CLI
+        if: steps.check-context.outputs.skip != 'true'
+        run: |
+          # Install Claude Code CLI
+          curl -fsSL https://claude.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        if: steps.check-context.outputs.skip != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq pandoc texlive-xetex npm
+
+          # Install mermaid-filter for diagram rendering in PDFs
+          sudo npm install -g @mermaid-js/mermaid-cli mermaid-filter || echo "⚠️ mermaid-filter installation failed, PDFs will not render diagrams"
+
+      - name: Execute research pipeline
+        if: steps.check-context.outputs.skip != 'true'
+        env:
+          CLAUDE_CMD: "claude --dangerously-skip-permissions --allowedTools '*'"
+        run: |
+          if [ "${{ github.event.inputs.sprint_numbers }}" = "all" ] || [ -z "${{ github.event.inputs.sprint_numbers }}" ]; then
+            # Check if run-complete-analysis.sh exists and is executable
+            if [ -f "./scripts/run-complete-analysis.sh" ]; then
+              # Execute all sprints (requires arguments from config)
+              PROJECT_NAME=$(grep "^project_name:" config/project-config.yml | cut -d: -f2- | xargs)
+              INDUSTRY=$(grep "^industry:" config/project-config.yml | cut -d: -f2- | xargs)
+              COMPANY=$(grep "^company_name:" config/project-config.yml | cut -d: -f2- | xargs)
+
+              # Execute with config values
+              echo "Executing research for: $PROJECT_NAME ($COMPANY in $INDUSTRY)"
+              ./scripts/run-complete-analysis.sh "$PROJECT_NAME" "$INDUSTRY" "$COMPANY"
+            else
+              echo "⚠️  run-complete-analysis.sh not found - skipping execution"
+            fi
+          else
+            # Execute specific sprints
+            IFS=',' read -ra SPRINTS <<< "${{ github.event.inputs.sprint_numbers }}"
+            for sprint in "${SPRINTS[@]}"; do
+              if [ -f "./scripts/run-sprint.sh" ]; then
+                ./scripts/run-sprint.sh "$sprint"
+              else
+                echo "⚠️  run-sprint.sh not found - skipping sprint $sprint"
+              fi
+            done
+          fi
+
+      - name: Validate quality
+        if: steps.check-context.outputs.skip != 'true'
+        run: |
+          if [ -f "./scripts/validate-all.sh" ]; then
+            ./scripts/validate-all.sh || true
+          else
+            echo "⚠️  validate-all.sh not found - skipping validation"
+          fi
+
+      - name: Export reports
+        if: steps.check-context.outputs.skip != 'true'
+        env:
+          CLAUDE_CMD: "claude --dangerously-skip-permissions --allowedTools '*'"
+        run: |
+          if [ -f "./scripts/export-reports.sh" ]; then
+            FORMAT="${{ github.event.inputs.export_format }}"
+            if [ -z "$FORMAT" ]; then
+              FORMAT="pdf"
+            fi
+            ./scripts/export-reports.sh "$FORMAT"
+          else
+            echo "⚠️  export-reports.sh not found - skipping export"
+          fi
+
+      - name: Upload artifacts
+        if: steps.check-context.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-reports
+          path: |
+            reports/
+            temp/
+          retention-days: 30
+
+      - name: Create release (if main branch)
+        if: steps.check-context.outputs.skip != 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="v$(date +%Y%m%d-%H%M%S)"
+          gh release create "$VERSION" \
+            --title "Strategic Research: $VERSION" \
+            --notes "Automated research execution via GitHub Actions" \
+            reports/*.pdf || true
