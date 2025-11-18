@@ -39,9 +39,123 @@ sprints:
         skill: "report-synthesizer"
         depends_on: ["01", "02", "03", "04", "05"]  # Array, task dependencies
 
+  - id: "02"
+    name: "Venture Capital Competitive Intelligence"
+    description: "AI-powered competitive intelligence automation for VC investment decisions"
+    priority: "medium"
+    status: "defined"
+    estimated_duration: "5 days"
+    tasks:
+      - id: "01"
+        name: "Technical & Regulatory Landscape"
+        skill: "technical-researcher"
+        parallel_subtasks: 6
+
+      - id: "02"
+        name: "Market & Competitive Assessment"
+        skill: "market-analyst"
+        parallel_subtasks: 5
+
+      - id: "03"
+        name: "Solution Architecture Design"
+        skill: "solution-architect"
+        parallel_subtasks: 6
+
+      - id: "04"
+        name: "Certification & Testing Strategy"
+        skill: "compliance-analyst"
+        parallel_subtasks: 5
+
+      - id: "05"
+        name: "Implementation Roadmap"
+        skill: "roadmap-planner"
+        parallel_subtasks: 6
+
+      - id: "06"
+        name: "Final Report Synthesis"
+        skill: "report-synthesizer"
+        depends_on: ["01", "02", "03", "04", "05"]
+
+  - id: "03"
+    name: "Corporate R&D Portfolio Intelligence"
+    description: "AI-powered portfolio intelligence for R&D resource optimization - systematically evaluate strategic fit of R&D initiatives"
+    priority: "high"
+    status: "defined"
+    estimated_duration: "5 days"
+    tasks:
+      - id: "01"
+        name: "Technical & Regulatory Landscape"
+        skill: "technical-researcher"
+        parallel_subtasks: 6
+
+      - id: "02"
+        name: "Market & Competitive Assessment"
+        skill: "market-analyst"
+        parallel_subtasks: 5
+
+      - id: "03"
+        name: "Solution Architecture Design"
+        skill: "solution-architect"
+        parallel_subtasks: 6
+
+      - id: "04"
+        name: "Certification & Testing Strategy"
+        skill: "compliance-analyst"
+        parallel_subtasks: 5
+
+      - id: "05"
+        name: "Implementation Roadmap"
+        skill: "roadmap-planner"
+        parallel_subtasks: 6
+
+      - id: "06"
+        name: "Final Report Synthesis"
+        skill: "report-synthesizer"
+        depends_on: ["01", "02", "03", "04", "05"]
+
+  - id: "04"
+    name: "VoC Automated Roadmap Prioritization"
+    description: "AI-powered Voice of Customer synthesis for automated product roadmap prioritization - transform manual VoC analysis into evidence-based priority recommendations"
+    priority: "high"
+    status: "completed"
+    estimated_duration: "5 days"
+    completion_date: "2025-11-18"
+    opportunity_score: 86.5
+    recommendation: "STRONG GO"
+    tasks:
+      - id: "01"
+        name: "Technical & Regulatory Landscape"
+        skill: "technical-researcher"
+        parallel_subtasks: 6
+
+      - id: "02"
+        name: "Market & Competitive Assessment"
+        skill: "market-analyst"
+        parallel_subtasks: 5
+
+      - id: "03"
+        name: "Solution Architecture Design"
+        skill: "solution-architect"
+        parallel_subtasks: 6
+
+      - id: "04"
+        name: "Certification & Testing Strategy"
+        skill: "compliance-analyst"
+        parallel_subtasks: 5
+
+      - id: "05"
+        name: "Implementation Roadmap"
+        skill: "roadmap-planner"
+        parallel_subtasks: 6
+
+      - id: "06"
+        name: "Final Report Synthesis"
+        skill: "report-synthesizer"
+        depends_on: ["01", "02", "03", "04", "05"]
+
   # Add more sprints as needed
-  # - id: "02"
-  #   name: "Second Opportunity Area"
+  # - id: "05"
+  #   name: "Fifth Opportunity Area"
   #   description: "Investigation of alternative approach or market segment"
   #   priority: "medium"
   #   estimated_duration: "4 days"
