@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'reports/sprint-*-final-report.md'
+      - 'reports/*.md'
       - 'docs/index.html'
       - 'docs/reports/**'
 
@@ -36,8 +36,8 @@ jobs:
       - name: Copy reports to docs directory
         run: |
           mkdir -p docs/reports
-          # Copy all final reports in various formats
-          find reports -name "sprint-*-final-report.*" -type f -exec cp {} docs/reports/ \; || true
+          # Copy all report markdown files
+          cp reports/*.md docs/reports/ 2>/dev/null || true
 
           echo "✓ Copied reports to docs directory"
           ls -lh docs/reports/ || echo "No reports found"
